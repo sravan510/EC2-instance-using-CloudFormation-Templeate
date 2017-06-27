@@ -1,5 +1,4 @@
-Topic : Create a cloudfromation template that builds an entire VPC, including subnets, internet gateway and routing tables .
-	    After buliding VPC the template should launch EC2 instance into the public VPC.
+Topic : Create a cloudfromation template that builds an entire VPC, including subnets, internet gateway and routing tables. After buliding VPC the template should launch EC2 instance into the public VPC.
 
 
 Steps Followed:
