@@ -1,0 +1,128 @@
+# AWS::EC2::VPC
+# AWS::EC2::Subnet
+# AWS::EC2::InternetGateway
+# AWS::EC2::VPCGatewayAttachment
+# AWS::EC2::RouteTable
+# AWS::EC2::Route
+# AWS::EC2::SubnetRouteTableAssociation
+# AWS::EC2::NetworkAcl
+# AWS::EC2::SubnetNetworkAclAssociation
+# AWS::EC2::Instance
+
+{
+“AWSTemplateFormatVersion” : “2010-09-09”,
+ “Description” : “Building A VPC From Scratch With CloudFormation”,
+ 
+ 
+ “Resources” : {
+ 
+# create an vpc 
+“VPC” :{
+ “AWSTemplateFormatVersion” : “2010-09-09”,
+ “Description” : “Building A VPC From Scratch With CloudFormation”,
+ “Resources” :{
+   "Type" : "AWS::EC2::VPC",
+   "Properties" : {
+      "CidrBlock" : 128.0.0.0/16,
+      "EnableDnsSupport" : "true",
+      "EnableDnsHostnames" : "true",
+      "InstanceTenancy" : "default",
+      "Tags" : [ { “Key” : “Application”, “Value” : { “Ref” : “AWS::StackName” } },
+ { “Key” : “Network”, “Value” : “Public” } ]
+   }
+}
+},
+
+# create an subnet in a vpc using vpcid
+ “PublicSubnet” : {
+  "Type" : "AWS::EC2::Subnet",
+  "Properties" : {
+    "AvailabilityZone" : Oregon,
+    "CidrBlock" : 128.0.1.0/24,
+    "Tags" : [ { “Key” : “Application”, “Value” : { “Ref” : “AWS::StackName” } },
+ { “Key” : “Network”, “Value” : “Public” }],
+    "VpcId" :  { “Ref” : “VPC” }
+  }
+  },
+  
+# create an internet gateway 
+  
+“InternetGateway” : {
+ “Type” : “AWS::EC2::InternetGateway”
+ },
+ 
+ # Attache internet vpc to the internet gateway using vpcid
+ 
+ “GatewayToInternet” : {
+ “Type” : “AWS::EC2::VPCGatewayAttachment”,
+ “Properties” : {
+ “VpcId” : { “Ref” : “VPC” },
+ “InternetGatewayId” : { “Ref” : “InternetGateway” }
+ }
+ },
+
+ # create a route table for an vpc using vpcid
+ 
+ “PublicRouteTable” : {
+    "Type" : "AWS::EC2::RouteTable",
+   "Properties" : {
+      "VpcId" : { “Ref” : “VPC” },
+      "Tags" : [ Resource Tag, ... ]
+   }
+   },
+   
+   
+ # route the route table to the created internet gateway  
+ 
+“PublicRoute” : {
+  "Type" : "AWS::EC2::Route",
+  “DependsOn” : “GatewayToInternet”, # DependsOn attribute you can specify that the creation of a 
+									 #  specific resource follows another. When you add a DependsOn attribute to a resource,
+									 #  that resource is created only after the creation of the resource specified in the DependsOn attribute 
+  "Properties" : {
+    "DestinationCidrBlock" : "0.0.0.0/0",
+    "DestinationIpv6CidrBlock" : String,
+    "GatewayId" : { “Ref” : “InternetGateway” },
+    "RouteTableId" : { “Ref” : “PublicRouteTable” },
+  }
+  },
+  
+  
+  # associate a subnet with a route table
+  
+“PublicSubnetRouteTableAssociation”  : {
+   "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties" : {
+       "RouteTableId" : { “Ref” : “PublicRouteTable” },
+      "SubnetId" : { “Ref” :“PublicSubnet”}
+   }
+},
+
+
+# create an EC2 instance 
+
+“PublicInstance” : {
+ “Type” : “AWS::EC2::Instance”,
+ “DependsOn” : “GatewayToInternet”,
+ “Properties” : {
+ “InstanceType” : “t1.micro”,
+ “ImageId” : “ami-fb8e9292”,          # AMI Identifier 		   :  ami-fb8e9292
+									  # Owner Code      	   :  137112412989
+									  #	State available Region :  us-east-1
+									  #	Architecture           :  x86_64
+									  #	Platform	           :  linux
+									  #	Kernel                 :  aki-919dcaf8
+									  # Image location         :  amazon/amzn-ami-pv-2014.03.1.x86_64-ebs
+									  # Root Device Type 	   : ebs
+									  # Root Device Name       : /dev/sda1
+									  #	Added about         : 3 years ago
+ “NetworkInterfaces” : [{
+ “AssociatePublicIpAddress” : “true”,   # AssociatedPublicIpAddress property that this network interface receives a public IP address. 
+ “DeviceIndex” : “0”,                   # The DeviceIndex defines the interface’s position in the attachment order
+ “DeleteOnTermination” : “true”,        # DeleteOnTermination notes that that network interface should be deleted when the instance is terminated
+ “SubnetId” : { “Ref” : “PublicSubnet” }
+ }]
+ }
+ }
+ }
+ }
